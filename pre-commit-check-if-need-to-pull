@@ -1,9 +1,7 @@
 #!/bin/bash
-set -e
-set -o pipefail
 
 echo "Running pre-commit"
-echo "-----START"
+echo "-----GIT HEAD CHECK START"
 
 `git fetch`
 
@@ -23,6 +21,6 @@ else
 	echo "Diverged"
 fi
 
-echo "-----END"
+echo "-----GIT HEAD CHECK END"
 
 exit 0
