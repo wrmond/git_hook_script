@@ -1,0 +1,55 @@
+#!/bin/bash
+
+echo "Running pre-commit"
+
+
+ERRORS_BUFFER=""
+TEXT_DEFAULT="\\033[0;39m"
+TEXT_INFO="\\033[1;32m"
+TEXT_ERROR="\\033[1;31m"
+TEXT_UNDERLINE="\\0033[4m"
+TEXT_BOLD="\\0033[1m"
+
+echo "----- php -l START"
+ROOT_DIR="$(pwd)/"
+# Add uncommon php extensions here
+PHP_EXTENSIONS="(.php$|.phtml$)"
+LIST=$(git diff-index --cached --diff-filter=ACMR --name-only HEAD)
+
+
+for file in $LIST
+do
+	#ACTUAL_FILENAME=$(echo "$file" | cut -f2)
+	ACTUAL_FILENAME=$(echo "$file")
+	EXTENSION=$(echo "$ACTUAL_FILENAME" | grep -E $PHP_EXTENSIONS) 
+	if [ "$EXTENSION" != "" ]; then
+		echo -e "$TEXT_INFO" "Checking file: $ROOT_DIR$ACTUAL_FILENAME" "$TEXT_DEFAULT"
+		
+		ERRORS=$(php -l $ROOT_DIR$ACTUAL_FILENAME | grep "Parse error")
+        if [ "$ERRORS" != "" ]; then
+            if [ "$ERRORS_BUFFER" != "" ]; then
+                ERRORS_BUFFER="$ERRORS_BUFFER\n\t$ERRORS"
+            else
+                ERRORS_BUFFER="$ERRORS\t"
+            fi
+            echo -e "$TEXT_ERROR" "Syntax errors found in file: $ACTUAL_FILENAME" "$TEXT_DEFAULT"
+        else
+            echo -e "$TEXT_INFO" "Syntax Ok" "$TEXT_DEFAULT"
+        fi
+    fi
+done
+
+echo -e " $TEXT_DEFAULT"
+
+if [ "$ERRORS_BUFFER" != "" ]; then
+    echo
+    echo -e "$TEXT_ERROR" "These errors were found in try-to-commit files: " "$TEXT_DEFAULT"
+    echo -e "\t$ERRORS_BUFFER"
+    echo
+    echo -e "$TEXT_ERROR" "Can't commit, fix errors first." "$TEXT_DEFAULT"
+    exit 1
+fi
+echo "----- php -l END"
+
+
+exit 0
